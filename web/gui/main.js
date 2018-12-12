@@ -629,7 +629,11 @@ function renderMachines(machinesArray) {
 
 // Populates the my-netdata menu.
 function netdataRegistryCallback(machinesArray) {
-    registryKnowAgents = machinesArray;
+    if (isSignedIn() && isRegistryMigrated()) {
+        machinesArray = associatedAgents;
+    } else {
+        registryKnownAgents = machinesArray;        
+    }
 
     let html = '';
 
@@ -646,11 +650,6 @@ function netdataRegistryCallback(machinesArray) {
 
     if (options.hosts.length > 1) {
         html += renderStreamedHosts(options) + `<hr />`;
-    }
-
-    if (isSignedIn() && isRegistryMigrated()) {
-        console.log("-- using migrated agents")
-        machinesArray = associatedAgents;
     }
 
     html += renderMachines(machinesArray);
@@ -4355,10 +4354,14 @@ var netdataCallback = initializeDynamicDashboard;
 // =================================================================================================
 // netdata.cloud
 
-const cloudBaseURL = "http://localhost:8080";
+const cloudBaseURL = "http://localhost:8080"; // TODO: Read from configuration.
 
 // -------------------------------------------------------------------------------------------------
 
+// The known agents in the legacy global registry.
+let registryKnownAgents = [];
+
+// The agents associated with the current cloud account.
 let associatedAgents = [];
 
 // -------------------------------------------------------------------------------------------------
@@ -4389,7 +4392,6 @@ function truncateString(str, maxLength) {
 
 // https://github.com/netdata/hub/issues/146
 function getAgentsList() {
-    console.log("+++1");
     const accountID = localStorage.getItem("cloud.accountID");
     const token = localStorage.getItem("cloud.token");
     if (accountID == null || token == null) {
@@ -4434,7 +4436,7 @@ function postAgentsMigrate() {
         return;
     }
 
-    const agents = registryKnowAgents.map((a) => {
+    const agents = registryKnownAgents.map((a) => {
         return {
             "id": a.guid,
             "name": a.name,
@@ -4483,6 +4485,7 @@ function signOut() {
     localStorage.removeItem("cloud.accountID");
     localStorage.removeItem("cloud.accountName");
     localStorage.removeItem("cloud.token");
+    // localStorage.removeItem("cloud.registryMigrated");
     
     renderAccountUI();
     deinitSignInModal();
@@ -4512,8 +4515,6 @@ function renderAccountUI() {
 }
 
 function handleMessage(e) {
-    console.log("...", e.data);
-    
     localStorage.setItem("cloud.accountID", e.data.accountID);
     localStorage.setItem("cloud.accountName", e.data.accountName);
     localStorage.setItem("cloud.token", e.data.token);
@@ -4523,7 +4524,6 @@ function handleMessage(e) {
     deinitSignInModal();
 
     if (!isRegistryMigrated()) {
-        console.log("--- migration");
         postAgentsMigrate();
     }
 }
