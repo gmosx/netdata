@@ -633,19 +633,24 @@ function netdataRegistryCallback(machinesArray) {
 
     let html = '';
 
-    if (isSignedIn()) {
-        html += (
-            `<div class="agent-item">
-                <i style="color: red" class="fas fa-cloud-upload-alt"></i>
-                <a href="#" onclick="migrateRegistryDidClick()">Migrate Registry</a>
-                <div></div>
-            </div>
-            <hr />`
-        )
-    }
+    // if (isSignedIn()) {
+    //     html += (
+    //         `<div class="agent-item">
+    //             <i style="color: red" class="fas fa-cloud-upload-alt"></i>
+    //             <a href="#" onclick="migrateRegistryDidClick()">Migrate Registry</a>
+    //             <div></div>
+    //         </div>
+    //         <hr />`
+    //     )
+    // }
 
     if (options.hosts.length > 1) {
         html += renderStreamedHosts(options) + `<hr />`;
+    }
+
+    if (isSignedIn() && isRegistryMigrated()) {
+        console.log("-- using migrated agents")
+        machinesArray = associatedAgents;
     }
 
     html += renderMachines(machinesArray);
@@ -4354,7 +4359,7 @@ const cloudBaseURL = "http://localhost:8080";
 
 // -------------------------------------------------------------------------------------------------
 
-let registryKnowAgents = [];
+let associatedAgents = [];
 
 // -------------------------------------------------------------------------------------------------
 
@@ -4382,16 +4387,47 @@ function truncateString(str, maxLength) {
 
 // -------------------------------------------------------------------------------------------------
 
-function signInDidClick() {
-    initSignInModal();
-}
+// https://github.com/netdata/hub/issues/146
+function getAgentsList() {
+    console.log("+++1");
+    const accountID = localStorage.getItem("cloud.accountID");
+    const token = localStorage.getItem("cloud.token");
+    if (accountID == null || token == null) {
+        return;
+    }
+    
+    fetch(
+        `${cloudBaseURL}/api/v1/agents/list?accountID=${accountID}`,
+        {
+            method: "GET",
+            mode: "cors",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        }
+    ).then((response)  => {
+        return response.json();
+    }).then((payload) => {
+        agents = payload.result ? payload.result.agents : null;
 
-function signOutDidClick() {
-    signOut();
+        if (!agents) {
+            // TODO: handle this!
+            return;
+        }
+
+        associatedAgents = agents.map((a) => {
+            return {
+                "guid": a.id,
+                "name": a.name,
+                "url": a.urls[0],
+                "alternate_urls": a.urls
+            }
+        })
+    });
 }
 
 // https://github.com/netdata/hub/issues/128
-function migrateRegistryDidClick() {
+function postAgentsMigrate() {
     const accountID = localStorage.getItem("cloud.accountID");
     const token = localStorage.getItem("cloud.token");
     if (accountID == null || token == null) {
@@ -4410,9 +4446,6 @@ function migrateRegistryDidClick() {
         "accountID": accountID,
         "agents": agents
     };
-
-    console.log("...")
-    console.log(JSON.stringify(payload, null, 4))
     
     fetch(
         `${cloudBaseURL}/api/v1/agents/migrate`,
@@ -4425,11 +4458,25 @@ function migrateRegistryDidClick() {
             },
             body: JSON.stringify(payload)
         }
-    ).then(function(response) {
+    ).then((response) => {
         return response.json();
-    }).then(function(myJson) {
-        console.log(JSON.stringify(myJson));
+    }).then((payload) => {
+        localStorage.setItem("cloud.registryMigrated", true);
     });
+}
+
+// -------------------------------------------------------------------------------------------------
+
+function signInDidClick() {
+    initSignInModal();
+}
+
+function signOutDidClick() {
+    signOut();
+}
+
+function migrateRegistryDidClick() {
+    postAgentsMigrate();
 }
 
 function signOut() {
@@ -4474,6 +4521,11 @@ function handleMessage(e) {
     renderAccountUI();
     closeModal();
     deinitSignInModal();
+
+    if (!isRegistryMigrated()) {
+        console.log("--- migration");
+        postAgentsMigrate();
+    }
 }
 
 function isSignedIn() {
@@ -4481,7 +4533,7 @@ function isSignedIn() {
 }
 
 function isRegistryMigrated() {
-    return localStorage.getItem("cloud.knownAgents") != null;
+    return localStorage.getItem("cloud.registryMigrated") == "true";
 }
 
 function initSignInModal() {
@@ -4502,6 +4554,10 @@ function deinitSignInModal() {
 
 function initUI() {
     renderAccountUI();
+
+    if (isSignedIn()) {
+        getAgentsList();
+    }
 }
 
 if (document.readyState === "complete") {
