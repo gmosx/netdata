@@ -4495,6 +4495,9 @@ function renderAccountUI() {
     const container = document.getElementById("account-menu-container");
     if (isSignedIn()) {
         const accountName = localStorage.getItem("cloud.accountName");
+        container.removeAttribute("title");
+        container.removeAttribute("data-original-title");
+        container.removeAttribute("data-placement");
         container.innerHTML = (
             `<a href="#" class="dropdown-toggle" data-toggle="dropdown">${accountName} <strong class="caret"></strong></a>
             <ul id="mynetdata_servers2" class="dropdown-menu scrollable-menu inpagemenu" role="menu">
@@ -4506,6 +4509,9 @@ function renderAccountUI() {
             </ul>`
         )
     } else {
+        container.setAttribute("title", "sign in");
+        container.setAttribute("data-original-title", "sign in");
+        container.setAttribute("data-placement", "bottom");
         container.innerHTML = (
             `<a href="#" class="btn" data-toggle="modal" data-target="#signInModal" onclick="signInDidClick();">
                 <i class="fas fa-sign-in-alt"></i>&nbsp;<span class="hidden-sm hidden-md">Sign In</span>
