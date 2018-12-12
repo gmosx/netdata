@@ -4440,7 +4440,7 @@ function postAgentsMigrate() {
         return {
             "id": a.guid,
             "name": a.name,
-            "urls": [ a.url ]
+            "urls": a.alternate_urls
         }
     })
 
