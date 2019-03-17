@@ -325,8 +325,7 @@ function createDOMPurify() {
   var DATA_URI_TAGS = addToSet({}, ['audio', 'video', 'img', 'source', 'image']);
 
   /* Attributes safe for values like "javascript:" */
-  var URI_SAFE_ATTRIBUTES = null;
-  var DEFAULT_URI_SAFE_ATTRIBUTES = addToSet({}, ['alt', 'class', 'for', 'id', 'label', 'name', 'pattern', 'placeholder', 'summary', 'title', 'value', 'style', 'xmlns']);
+  var URI_SAFE_ATTRIBUTES = addToSet({}, ['alt', 'class', 'for', 'id', 'label', 'name', 'pattern', 'placeholder', 'summary', 'title', 'value', 'style', 'xmlns']);
 
   /* Keep a reference to config to pass to hooks */
   var CONFIG = null;
@@ -355,7 +354,6 @@ function createDOMPurify() {
     /* Set configuration parameters */
     ALLOWED_TAGS = 'ALLOWED_TAGS' in cfg ? addToSet({}, cfg.ALLOWED_TAGS) : DEFAULT_ALLOWED_TAGS;
     ALLOWED_ATTR = 'ALLOWED_ATTR' in cfg ? addToSet({}, cfg.ALLOWED_ATTR) : DEFAULT_ALLOWED_ATTR;
-    URI_SAFE_ATTRIBUTES = 'ADD_URI_SAFE_ATTR' in cfg ? addToSet({}, cfg.ADD_URI_SAFE_ATTR) : DEFAULT_URI_SAFE_ATTRIBUTES;
     FORBID_TAGS = 'FORBID_TAGS' in cfg ? addToSet({}, cfg.FORBID_TAGS) : {};
     FORBID_ATTR = 'FORBID_ATTR' in cfg ? addToSet({}, cfg.FORBID_ATTR) : {};
     USE_PROFILES = 'USE_PROFILES' in cfg ? cfg.USE_PROFILES : false;
@@ -986,8 +984,6 @@ function createDOMPurify() {
       importedNode = body.ownerDocument.importNode(dirty, true);
       if (importedNode.nodeType === 1 && importedNode.nodeName === 'BODY') {
         /* Node is already a body, use as is */
-        body = importedNode;
-      } else if (importedNode.nodeName === 'HTML') {
         body = importedNode;
       } else {
         // eslint-disable-next-line unicorn/prefer-node-append

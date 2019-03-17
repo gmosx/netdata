@@ -91,6 +91,7 @@ dist_weblib_DATA = \
 	lib/pako-1.0.6.min.js \
 	lib/perfect-scrollbar-0.6.15.min.js \
 	lib/tableExport-1.6.0.min.js \
+	lib/purify.min.js \
 	$(NULL)
 
 webcssdir=$(webdir)/css
