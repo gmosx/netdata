@@ -5,12 +5,16 @@ NETDATA.xss = {
     enabled: (typeof netdataCheckXSS === 'undefined') ? false : netdataCheckXSS,
     enabled_for_data: (typeof netdataCheckXSS === 'undefined') ? false : netdataCheckXSS,
 
-    string: function (s) {
+    string2: function (s) {
         return s.toString()
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    },
+
+    string: function (dirty) {
+        return DOMPurify.sanitize(dirty);
     },
 
     object: function (name, obj, ignore_regex) {
