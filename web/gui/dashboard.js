@@ -654,12 +654,20 @@ NETDATA.xss = {
     enabled: (typeof netdataCheckXSS === 'undefined') ? false : netdataCheckXSS,
     enabled_for_data: (typeof netdataCheckXSS === 'undefined') ? false : netdataCheckXSS,
 
-    string: function (s) {
+    stringRaw: function (s) {
         return s.toString()
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    },
+
+    string: function (dirty) {
+        if (DOMPurify) {
+            return DOMPurify.sanitize(dirty);
+        } else {
+            return NETDATA.xss.stringRaw(dirty);
+        }
     },
 
     object: function (name, obj, ignore_regex) {

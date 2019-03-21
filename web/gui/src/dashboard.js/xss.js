@@ -5,7 +5,7 @@ NETDATA.xss = {
     enabled: (typeof netdataCheckXSS === 'undefined') ? false : netdataCheckXSS,
     enabled_for_data: (typeof netdataCheckXSS === 'undefined') ? false : netdataCheckXSS,
 
-    string2: function (s) {
+    stringRaw: function (s) {
         return s.toString()
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -14,7 +14,11 @@ NETDATA.xss = {
     },
 
     string: function (dirty) {
-        return DOMPurify.sanitize(dirty);
+        if (DOMPurify) {
+            return DOMPurify.sanitize(dirty);
+        } else {
+            return NETDATA.xss.stringRaw(dirty);
+        }
     },
 
     object: function (name, obj, ignore_regex) {

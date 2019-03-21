@@ -3302,7 +3302,8 @@ function loadSnapshotPreflightFile(file) {
         document.getElementById('loadSnapshotFilename').innerHTML = filename;
         var result = null;
         try {
-            result = NETDATA.xss.checkAlways('snapshot', JSON.parse(e.target.result), /^(snapshot\.info|snapshot\.data)$/);
+            // result = NETDATA.xss.checkAlways('snapshot', JSON.parse(e.target.result), /^(snapshot\.info|snapshot\.data)$/);
+            result = NETDATA.xss.checkAlways('snapshot', JSON.parse(e.target.result), /^(snapshot\.info)$/);
 
             //console.log(result);
             var date_after = new Date(result.after_ms);
